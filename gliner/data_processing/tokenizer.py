@@ -108,9 +108,16 @@ class PolyglotTokenSplitter(TokenSplitterBase):
             raise error.__class__(
                 "Please install polyglot with: `pip install polyglot`. For additional dependencies, refer to https://polyglot.readthedocs.io/en/latest/Installation.html"
             )
+        try:
+            import langid  # noqa
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install langid with: `pip install langid`"
+            )
 
     def __call__(self, text):
         from polyglot.text import Text
+        import langid
         # Detect language using langid
         lang, _ = langid.classify(text)
         # Tokenize using Polyglot
