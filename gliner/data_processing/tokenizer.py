@@ -100,6 +100,28 @@ class HanLPTokenSplitter(TokenSplitterBase):
             last_idx = end_idx
             yield token, start_idx, end_idx
 
+class PolyglotTokenSplitter(TokenSplitterBase):
+    def __init__(self):
+        try:
+            from polyglot.text import Text  # noqa
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install polyglot with: `pip install polyglot`. For additional dependencies, refer to https://polyglot.readthedocs.io/en/latest/Installation.html"
+            )
+
+    def __call__(self, text):
+        from polyglot.text import Text
+        # Detect language using langid
+        lang, _ = langid.classify(text)
+        # Tokenize using Polyglot
+        tokens = Text(text, hint_language_code=lang).words
+        last_idx = 0
+        for token in tokens:
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
 class WordsSplitter(TokenSplitterBase):
     def __init__(self, splitter_type='whitespace'):
         if splitter_type=='whitespace':
@@ -111,7 +133,9 @@ class WordsSplitter(TokenSplitterBase):
         elif splitter_type == 'jieba':
             self.splitter = JiebaTokenSplitter()
         elif splitter_type == 'hanlp':
-            self.splitter = HanLPTokenSplitter()    
+            self.splitter = HanLPTokenSplitter()
+        elif splitter_type == 'polyglot':
+            self.splitter = PolyglotTokenSplitter()
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
     
